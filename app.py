@@ -2,7 +2,12 @@ import streamlit as st
 import joblib
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
+try:
+    import matplotlib.pyplot as plt
+    MATPLOTLIB_AVAILABLE = True
+except ImportError:
+    MATPLOTLIB_AVAILABLE = False
+    st.warning("Matplotlib is not installed. Confidence score visualization will be skipped.")
 
 # Custom CSS for enhanced styling
 st.markdown("""
@@ -133,18 +138,19 @@ if submit_button:
             st.write(f"**Logistic Regression**: {'Has Heart Disease' if log_pred == 1 else 'No Heart Disease'} (Confidence: {log_prob if log_pred == 1 else log_prob_no:.2f})")
             st.write(f"**Random Forest**: {'Has Heart Disease' if rf_pred == 1 else 'No Heart Disease'} (Confidence: {rf_prob if rf_pred == 1 else rf_prob_no:.2f})")
             
-            # Visualize confidence scores
-            st.markdown('<div class="subheader">Confidence Scores</div>', unsafe_allow_html=True)
-            fig, ax = plt.subplots(figsize=(6, 4))
-            models = ['Logistic Regression', 'Random Forest']
-            confidences = [log_prob if log_pred == 1 else log_prob_no, rf_prob if rf_pred == 1 else rf_prob_no]
-            colors = ['#1e88e5' if log_pred == 1 else '#4caf50', '#1e88e5' if rf_pred == 1 else '#4caf50']
-            ax.bar(models, confidences, color=colors)
-            ax.set_ylim(0, 1)
-            ax.set_ylabel("Confidence Score")
-            for i, v in enumerate(confidences):
-                ax.text(i, v + 0.02, f"{v:.2f}", ha='center', fontweight='bold')
-            st.pyplot(fig)
+            # Visualize confidence scores if matplotlib is available
+            if MATPLOTLIB_AVAILABLE:
+                st.markdown('<div class="subheader">Confidence Scores</div>', unsafe_allow_html=True)
+                fig, ax = plt.subplots(figsize=(6, 4))
+                models = ['Logistic Regression', 'Random Forest']
+                confidences = [log_prob if log_pred == 1 else log_prob_no, rf_prob if rf_pred == 1 else rf_prob_no]
+                colors = ['#1e88e5' if log_pred == 1 else '#4caf50', '#1e88e5' if rf_pred == 1 else '#4caf50']
+                ax.bar(models, confidences, color=colors)
+                ax.set_ylim(0, 1)
+                ax.set_ylabel("Confidence Score")
+                for i, v in enumerate(confidences):
+                    ax.text(i, v + 0.02, f"{v:.2f}", ha='center', fontweight='bold')
+                st.pyplot(fig)
             
             # Decide best prediction
             if log_pred == rf_pred:
