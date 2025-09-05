@@ -172,7 +172,7 @@ if submit_button:
         st.error("Invalid inputs detected. Please ensure all values are within realistic ranges (e.g., no negative values, blood pressure ≥ 50, cholesterol ≥ 50).")
     else:
         with st.spinner("Analyzing patient data..."):
-            # Predictions (inverted due to suspected label inversion)
+            # Predictions
             log_pred = logistic_model.predict(input_data)[0]
             log_prob = logistic_model.predict_proba(input_data)[0][1]  # Probability of class 1
             log_prob_no = 1 - log_prob  # Probability of class 0
@@ -215,11 +215,6 @@ if submit_button:
             else:
                 st.success(f"The patient is predicted to NOT have heart disease based on {best_model} (Confidence: {best_conf:.2f}).")
             
-            # Risk gauge
-            st.markdown('<div class="subheader">Risk Level</div>', unsafe_allow_html=True)
-            st.progress(min(best_conf, 1.0))
-            st.caption(f"Confidence Score: {best_conf:.2f}")
-            
             # Confidence scores bar chart
             if MATPLOTLIB_AVAILABLE:
                 st.markdown('<div class="subheader">Confidence Scores</div>', unsafe_allow_html=True)
@@ -233,6 +228,11 @@ if submit_button:
                 for i, v in enumerate(confidences):
                     ax.text(i, v + 0.02, f"{v:.2f}", ha='center', fontweight='bold')
                 st.pyplot(fig)
+            
+            # Risk gauge
+            st.markdown('<div class="subheader">Risk Level</div>', unsafe_allow_html=True)
+            st.progress(min(best_conf, 1.0))
+            st.caption(f"Confidence Score: {best_conf:.2f}")
             
             # Feature importance plot
             if MATPLOTLIB_AVAILABLE:
