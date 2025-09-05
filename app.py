@@ -7,9 +7,12 @@ try:
     MATPLOTLIB_AVAILABLE = True
 except ImportError:
     MATPLOTLIB_AVAILABLE = False
-    st.warning("Matplotlib is not installed. Confidence score visualization will be skipped.")
+    st.warning("Matplotlib is not installed. Visualization features will be skipped.")
+import io
+import base64
+from datetime import datetime
 
-# Custom CSS for enhanced styling
+# Custom CSS for styling
 st.markdown("""
 <style>
     .main {background-color: #f9f9f9;}
@@ -31,6 +34,7 @@ st.markdown("""
     .header {font-size: 26px; font-weight: bold; color: #1e88e5; margin-bottom: 15px;}
     .subheader {font-size: 20px; font-weight: bold; color: #424242; margin-top: 20px;}
     .info-box {background-color: #e3f2fd; padding: 10px; border-radius: 5px; margin-bottom: 10px;}
+    .stProgress .st-bo {background-color: #4caf50;}
 </style>
 """, unsafe_allow_html=True)
 
@@ -44,7 +48,7 @@ except FileNotFoundError:
 
 # Streamlit app title
 st.title("Heart Disease Prediction App")
-st.markdown("Predict the likelihood of heart disease using advanced machine learning models. Enter patient details below and get results instantly.")
+st.markdown("Predict the likelihood of heart disease using machine learning models. Enter patient details below to get results.")
 
 # Collapsible section for feature explanations
 with st.expander("Understanding Input Features"):
@@ -62,7 +66,7 @@ with st.expander("Understanding Input Features"):
         <strong>ST Depression (oldpeak)</strong>: ST depression induced by exercise relative to rest (0-6.2).<br>
         <strong>Slope of ST Segment (slope)</strong>: 0 = Upsloping, 1 = Flat, 2 = Downsloping.<br>
         <strong>Number of Major Vessels (ca)</strong>: Vessels colored by fluoroscopy (0-4).<br>
-        <strong>Thalassemia (thal)</strong>: 0 = Not described, 1 = Fixed defect, 2 = Reversible defect, 3 = Normal.
+        <strong>Thalassemia (thal)</strong>: 0 = Not described, 1 = Normal, 2 = Reversible defect, 3 = Fixed defect.
     </div>
     """, unsafe_allow_html=True)
 
@@ -95,7 +99,7 @@ with st.form(key="patient_form"):
         slope = st.selectbox("Slope of ST Segment (slope)", options=[0, 1, 2], format_func=lambda x: ["Upsloping", "Flat", "Downsloping"][x], help="Slope of ST segment during exercise.")
     with col6:
         ca = st.selectbox("Number of Major Vessels (ca)", options=[0, 1, 2, 3, 4], help="Vessels colored by fluoroscopy.")
-        thal = st.selectbox("Thalassemia (thal)", options=[0, 1, 2, 3], format_func=lambda x: ["Not described", "Fixed defect", "Reversible defect", "Normal"][x], help="Thalassemia condition.")
+        thal = st.selectbox("Thalassemia (thal)", options=[0, 1, 2, 3], format_func=lambda x: ["Not described", "Normal", "Reversible defect", "Fixed defect"][x], help="Thalassemia condition.")
 
     # Submit button
     submit_button = st.form_submit_button(label="Predict Heart Disease")
@@ -117,6 +121,51 @@ input_data = pd.DataFrame({
     'thal': [thal]
 })
 
+# Generate PDF report
+def generate_pdf_report(input_data, log_pred, log_prob, rf_pred, rf_prob, best_pred, best_model, best_conf):
+    # Creating LaTeX content for the PDF
+    latex_content = r"""
+    \documentclass{article}
+    \usepackage[utf8]{inputenc}
+    \usepackage{geometry}
+    \geometry{a4paper, margin=1in}
+    \usepackage{booktabs}
+    \usepackage{xcolor}
+    \title{Heart Disease Prediction Report}
+    \author{AI-Powered Prediction System}
+    \date{\today}
+    \begin{document}
+    \maketitle
+    \section{Patient Details}
+    \begin{tabular}{ll}
+    \toprule
+    \textbf{Feature} & \textbf{Value} \\
+    \midrule
+    Age & """ + str(input_data['age'][0]) + r""" \\
+    Sex & """ + ("Female" if input_data['sex'][0] == 0 else "Male") + r""" \\
+    Chest Pain Type & """ + ["Typical angina", "Atypical angina", "Non-anginal pain", "Asymptomatic"][input_data['cp'][0]] + r""" \\
+    Resting Blood Pressure & """ + str(input_data['trestbps'][0]) + r""" mm Hg \\
+    Serum Cholesterol & """ + str(input_data['chol'][0]) + r""" mg/dl \\
+    Fasting Blood Sugar & """ + ("≤ 120 mg/dl" if input_data['fbs'][0] == 0 else "> 120 mg/dl") + r""" \\
+    Resting ECG Results & """ + ["Normal", "ST-T wave abnormality", "Left ventricular hypertrophy"][input_data['restecg'][0]] + r""" \\
+    Maximum Heart Rate & """ + str(input_data['thalach'][0]) + r""" \\
+    Exercise Induced Angina & """ + ("No" if input_data['exang'][0] == 0 else "Yes") + r""" \\
+    ST Depression & """ + str(input_data['oldpeak'][0]) + r""" \\
+    Slope of ST Segment & """ + ["Upsloping", "Flat", "Downsloping"][input_data['slope'][0]] + r""" \\
+    Number of Major Vessels & """ + str(input_data['ca'][0]) + r""" \\
+    Thalassemia & """ + ["Not described", "Normal", "Reversible defect", "Fixed defect"][input_data['thal'][0]] + r""" \\
+    \bottomrule
+    \end{tabular}
+    \section{Prediction Results}
+    \textbf{Logistic Regression}: """ + ("Has Heart Disease" if log_pred == 1 else "No Heart Disease") + r""" (Confidence: """ + f"{log_prob if log_pred == 1 else 1 - log_prob:.2f}" + r""") \\
+    \textbf{Random Forest}: """ + ("Has Heart Disease" if rf_pred == 1 else "No Heart Disease") + r""" (Confidence: """ + f"{rf_prob if rf_pred == 1 else 1 - rf_prob:.2f}" + r""") \\
+    \textbf{Final Prediction}: """ + ("The patient is predicted to have heart disease" if best_pred == 1 else "The patient is predicted to NOT have heart disease") + r""" based on """ + best_model + r""" (Confidence: """ + f"{best_conf:.2f}" + r"""). \\
+    \section{Disclaimer}
+    This report is generated by an AI model for informational purposes only. Consult a healthcare professional for medical advice.
+    \end{document}
+    """
+    return latex_content
+
 # Predict when form is submitted
 if submit_button:
     # Input validation
@@ -132,25 +181,6 @@ if submit_button:
             rf_pred = random_forest_model.predict(input_data)[0]
             rf_prob = random_forest_model.predict_proba(input_data)[0][1]
             rf_prob_no = 1 - rf_prob
-            
-            # Display predictions
-            st.markdown('<div class="subheader">Model Predictions</div>', unsafe_allow_html=True)
-            st.write(f"**Logistic Regression**: {'Has Heart Disease' if log_pred == 1 else 'No Heart Disease'} (Confidence: {log_prob if log_pred == 1 else log_prob_no:.2f})")
-            st.write(f"**Random Forest**: {'Has Heart Disease' if rf_pred == 1 else 'No Heart Disease'} (Confidence: {rf_prob if rf_pred == 1 else rf_prob_no:.2f})")
-            
-            # Visualize confidence scores if matplotlib is available
-            if MATPLOTLIB_AVAILABLE:
-                st.markdown('<div class="subheader">Confidence Scores</div>', unsafe_allow_html=True)
-                fig, ax = plt.subplots(figsize=(6, 4))
-                models = ['Logistic Regression', 'Random Forest']
-                confidences = [log_prob if log_pred == 1 else log_prob_no, rf_prob if rf_pred == 1 else rf_prob_no]
-                colors = ['#1e88e5' if log_pred == 1 else '#4caf50', '#1e88e5' if rf_pred == 1 else '#4caf50']
-                ax.bar(models, confidences, color=colors)
-                ax.set_ylim(0, 1)
-                ax.set_ylabel("Confidence Score")
-                for i, v in enumerate(confidences):
-                    ax.text(i, v + 0.02, f"{v:.2f}", ha='center', fontweight='bold')
-                st.pyplot(fig)
             
             # Decide best prediction
             if log_pred == rf_pred:
@@ -170,10 +200,63 @@ if submit_button:
                 if best_conf < 0.6:
                     st.warning("Low confidence in prediction (<60%). Results may be unreliable. Consult a medical professional for accurate diagnosis.")
             
+            # Display predictions
+            st.markdown('<div class="subheader">Model Predictions</div>', unsafe_allow_html=True)
+            st.write(f"**Logistic Regression**: {'Has Heart Disease' if log_pred == 1 else 'No Heart Disease'} (Confidence: {log_prob if log_pred == 1 else log_prob_no:.2f})")
+            st.write(f"**Random Forest**: {'Has Heart Disease' if rf_pred == 1 else 'No Heart Disease'} (Confidence: {rf_prob if rf_pred == 1 else rf_prob_no:.2f})")
+            
             # Final output
             st.markdown('<div class="subheader">Final Prediction</div>', unsafe_allow_html=True)
             if best_pred == 1:
                 st.error(f"The patient is predicted to have heart disease based on {best_model} (Confidence: {best_conf:.2f}).")
             else:
                 st.success(f"The patient is predicted to NOT have heart disease based on {best_model} (Confidence: {best_conf:.2f}).")
+            
+            # Risk gauge
+            st.markdown('<div class="subheader">Risk Level</div>', unsafe_allow_html=True)
+            st.progress(min(best_conf, 1.0))
+            st.caption(f"Confidence Score: {best_conf:.2f}")
+            
+            # Confidence scores bar chart
+            if MATPLOTLIB_AVAILABLE:
+                st.markdown('<div class="subheader">Confidence Scores</div>', unsafe_allow_html=True)
+                fig, ax = plt.subplots(figsize=(6, 4))
+                models = ['Logistic Regression', 'Random Forest']
+                confidences = [log_prob if log_pred == 1 else log_prob_no, rf_prob if rf_pred == 1 else rf_prob_no]
+                colors = ['#1e88e5' if log_pred == 1 else '#4caf50', '#1e88e5' if rf_pred == 1 else '#4caf50']
+                ax.bar(models, confidences, color=colors)
+                ax.set_ylim(0, 1)
+                ax.set_ylabel("Confidence Score")
+                for i, v in enumerate(confidences):
+                    ax.text(i, v + 0.02, f"{v:.2f}", ha='center', fontweight='bold')
+                st.pyplot(fig)
+            
+            # Feature importance plot
+            if MATPLOTLIB_AVAILABLE:
+                st.markdown('<div class="subheader">Feature Importance (Random Forest)</div>', unsafe_allow_html=True)
+                feature_names = input_data.columns
+                importances = random_forest_model.feature_importances_
+                fig, ax = plt.subplots(figsize=(8, 5))
+                ax.barh(feature_names, importances, color='#0288d1')
+                ax.set_xlabel("Importance")
+                ax.set_title("Feature Importance")
+                st.pyplot(fig)
+            
+            # Downloadable PDF report
+            st.markdown('<div class="subheader">Download Report</div>', unsafe_allow_html=True)
+            pdf_content = generate_pdf_report(input_data, log_pred, log_prob, rf_pred, rf_prob, best_pred, best_model, best_conf)
+            pdf_buffer = io.BytesIO()
+            with open("report.tex", "w") as f:
+                f.write(pdf_content)
+            import subprocess
+            try:
+                subprocess.run(["latexmk", "-pdf", "report.tex"], check=True)
+                with open("report.pdf", "rb") as f:
+                    pdf_buffer.write(f.read())
+                b64 = base64.b64encode(pdf_buffer.getvalue()).decode()
+                href = f'<a href="data:application/pdf;base64,{b64}" download="heart_disease_prediction_report.pdf">Download Prediction Report</a>'
+                st.markdown(href, unsafe_allow_html=True)
+            except Exception as e:
+                st.warning(f"PDF generation failed: {e}. Please ensure LaTeX is installed or try again.")
+            
             st.markdown("*Note: This prediction is for informational purposes only. Please consult a healthcare professional for medical advice.*")
