@@ -79,7 +79,7 @@ with st.form(key="patient_form"):
         age = st.number_input("Age", min_value=0, max_value=120, value=35, help="Patient's age in years.")
         sex = st.selectbox("Sex", options=[0, 1], format_func=lambda x: "Female" if x == 0 else "Male", help="Select patient’s gender.")
     with col2:
-        cp = st.selectbox("Chest Pain Type (cp)", options=[0, 1, 2, 3], format_func=lambda x: ["Typical angina", "Atypical angina", "Non-anginal pain", "Asymptomatic"][x], help="Type of chest pain experienced.")
+        cp = st.selectbox("Chest Pain Type (cp)", options=[0, 1, 2, 3], format_func=lambda x: ["Typical angina", "Atypical angina", "Non-anginal pain", "Asymptomatic"][x], help="Type of chest pain experienced. Note: Typical angina is less risky in this model.")
 
     st.markdown("**Clinical Measurements**", unsafe_allow_html=True)
     col3, col4 = st.columns(2)
@@ -99,7 +99,7 @@ with st.form(key="patient_form"):
         slope = st.selectbox("Slope of ST Segment (slope)", options=[0, 1, 2], format_func=lambda x: ["Upsloping", "Flat", "Downsloping"][x], help="Slope of ST segment during exercise.")
     with col6:
         ca = st.selectbox("Number of Major Vessels (ca)", options=[0, 1, 2, 3, 4], help="Vessels colored by fluoroscopy.")
-        thal = st.selectbox("Thalassemia (thal)", options=[0, 1, 2, 3], format_func=lambda x: ["Not described", "Normal", "Reversible defect", "Fixed defect"][x], help="Thalassemia condition.")
+        thal = st.selectbox("Thalassemia (thal)", options=[0, 1, 2, 3], format_func=lambda x: ["Not described", "Normal", "Reversible defect", "Fixed defect"][x], help="Thalassemia condition. Normal (1) or Fixed defect (3) are less risky.")
 
     # Submit button
     submit_button = st.form_submit_button(label="Predict Heart Disease")
@@ -123,7 +123,6 @@ input_data = pd.DataFrame({
 
 # Generate PDF report
 def generate_pdf_report(input_data, log_pred, log_prob, rf_pred, rf_prob, best_pred, best_model, best_conf):
-    # Creating LaTeX content for the PDF
     latex_content = r"""
     \documentclass{article}
     \usepackage[utf8]{inputenc}
@@ -182,6 +181,11 @@ if submit_button:
             rf_prob = random_forest_model.predict_proba(input_data)[0][1]
             rf_prob_no = 1 - rf_prob
             
+            # Display predictions
+            st.markdown('<div class="subheader">Model Predictions</div>', unsafe_allow_html=True)
+            st.write(f"**Logistic Regression**: {'Has Heart Disease' if log_pred == 1 else 'No Heart Disease'} (Confidence: {log_prob if log_pred == 1 else log_prob_no:.2f})")
+            st.write(f"**Random Forest**: {'Has Heart Disease' if rf_pred == 1 else 'No Heart Disease'} (Confidence: {rf_prob if rf_pred == 1 else rf_prob_no:.2f})")
+            
             # Decide best prediction
             if log_pred == rf_pred:
                 best_pred = log_pred
@@ -199,11 +203,6 @@ if submit_button:
                 
                 if best_conf < 0.6:
                     st.warning("Low confidence in prediction (<60%). Results may be unreliable. Consult a medical professional for accurate diagnosis.")
-            
-            # Display predictions
-            st.markdown('<div class="subheader">Model Predictions</div>', unsafe_allow_html=True)
-            st.write(f"**Logistic Regression**: {'Has Heart Disease' if log_pred == 1 else 'No Heart Disease'} (Confidence: {log_prob if log_pred == 1 else log_prob_no:.2f})")
-            st.write(f"**Random Forest**: {'Has Heart Disease' if rf_pred == 1 else 'No Heart Disease'} (Confidence: {rf_prob if rf_pred == 1 else rf_prob_no:.2f})")
             
             # Final output
             st.markdown('<div class="subheader">Final Prediction</div>', unsafe_allow_html=True)
