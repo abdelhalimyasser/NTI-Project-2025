@@ -210,7 +210,7 @@ if submit_button:
             
             # Final output
             st.markdown('<div class="subheader">Final Prediction</div>', unsafe_allow_html=True)
-            if best_pred == 0:
+            if best_pred == 1:
                 st.error(f"The patient is predicted to have heart disease based on {best_model} (Confidence: {best_conf:.2f}).")
             else:
                 st.success(f"The patient is predicted to NOT have heart disease based on {best_model} (Confidence: {best_conf:.2f}).")
