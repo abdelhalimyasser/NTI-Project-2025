@@ -14,23 +14,34 @@ except FileNotFoundError:
 # Streamlit app title
 st.title("Heart Disease Prediction App")
 
-# Sidebar for user inputs
-st.sidebar.header("Enter Patient Details")
+# Main content for user inputs
+st.header("Enter Patient Details")
 
-# Input fields for features
-age = st.sidebar.number_input("Age", min_value=0, max_value=120, value=50)
-sex = st.sidebar.selectbox("Sex", options=[0, 1], format_func=lambda x: "Female" if x == 0 else "Male")
-cp = st.sidebar.selectbox("Chest Pain Type (cp)", options=[0, 1, 2, 3])
-trestbps = st.sidebar.number_input("Resting Blood Pressure (trestbps)", min_value=0, max_value=300, value=120)
-chol = st.sidebar.number_input("Serum Cholestoral (chol)", min_value=0, max_value=600, value=200)
-fbs = st.sidebar.selectbox("Fasting Blood Sugar > 120 mg/dl (fbs)", options=[0, 1])
-restecg = st.sidebar.selectbox("Resting ECG Results (restecg)", options=[0, 1, 2])
-thalach = st.sidebar.number_input("Maximum Heart Rate Achieved (thalach)", min_value=0, max_value=250, value=150)
-exang = st.sidebar.selectbox("Exercise Induced Angina (exang)", options=[0, 1])
-oldpeak = st.sidebar.number_input("ST Depression Induced by Exercise (oldpeak)", min_value=0.0, max_value=10.0, value=1.0, step=0.1)
-slope = st.sidebar.selectbox("Slope of Peak Exercise ST Segment (slope)", options=[0, 1, 2])
-ca = st.sidebar.selectbox("Number of Major Vessels Colored by Fluoroscopy (ca)", options=[0, 1, 2, 3, 4])
-thal = st.sidebar.selectbox("Thalassemia (thal)", options=[0, 1, 2, 3])
+# Create a form for better organization
+with st.form(key="patient_form"):
+    col1, col2, col3 = st.columns(3)
+
+    with col1:
+        age = st.number_input("Age", min_value=0, max_value=120, value=50)
+        sex = st.selectbox("Sex", options=[0, 1], format_func=lambda x: "Female" if x == 0 else "Male")
+        cp = st.selectbox("Chest Pain Type (cp)", options=[0, 1, 2, 3])
+        trestbps = st.number_input("Resting Blood Pressure (trestbps)", min_value=0, max_value=300, value=120)
+
+    with col2:
+        chol = st.number_input("Serum Cholestoral (chol)", min_value=0, max_value=600, value=200)
+        fbs = st.selectbox("Fasting Blood Sugar > 120 mg/dl (fbs)", options=[0, 1])
+        restecg = st.selectbox("Resting ECG Results (restecg)", options=[0, 1, 2])
+        thalach = st.number_input("Maximum Heart Rate Achieved (thalach)", min_value=0, max_value=250, value=150)
+
+    with col3:
+        exang = st.selectbox("Exercise Induced Angina (exang)", options=[0, 1])
+        oldpeak = st.number_input("ST Depression Induced by Exercise (oldpeak)", min_value=0.0, max_value=10.0, value=1.0, step=0.1)
+        slope = st.selectbox("Slope of Peak Exercise ST Segment (slope)", options=[0, 1, 2])
+        ca = st.selectbox("Number of Major Vessels Colored by Fluoroscopy (ca)", options=[0, 1, 2, 3, 4])
+        thal = st.selectbox("Thalassemia (thal)", options=[0, 1, 2, 3])
+
+    # Submit button for the form
+    submit_button = st.form_submit_button(label="Predict")
 
 # Prepare input data as DataFrame
 input_data = pd.DataFrame({
@@ -49,8 +60,8 @@ input_data = pd.DataFrame({
     'thal': [thal]
 })
 
-# Predict button
-if st.sidebar.button("Predict"):
+# Predict when the form is submitted
+if submit_button:
     # Predictions
     log_pred = logistic_model.predict(input_data)[0]
     log_prob = logistic_model.predict_proba(input_data)[0][1]  # Probability of disease (class 1)
@@ -60,8 +71,8 @@ if st.sidebar.button("Predict"):
     
     # Display individual predictions
     st.subheader("Predictions from Models:")
-    st.write(f"Logistic Regression Prediction: {'Has Heart Disease' if log_pred == 1 else 'No Heart Disease'} (Confidence: {log_prob:.2f})")
-    st.write(f"Random Forest Prediction: {'Has Heart Disease' if rf_pred == 1 else 'No Heart Disease'} (Confidence: {rf_prob:.2f})")
+    st.write(f"**Logistic Regression Prediction**: {'Has Heart Disease' if log_pred == 1 else 'No Heart Disease'} (Confidence: {log_prob:.2f})")
+    st.write(f"**Random Forest Prediction**: {'Has Heart Disease' if rf_pred == 1 else 'No Heart Disease'} (Confidence: {rf_prob:.2f})")
     
     # Decide the best prediction: choose the one with higher confidence probability for class 1 or 0
     if log_prob > rf_prob:
