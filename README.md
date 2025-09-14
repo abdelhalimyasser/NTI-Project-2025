@@ -46,7 +46,14 @@ You can interact with the live demo of this project through **Streamlit App**:
 This app allows you to:  
 - Input patient data (age, sex, chest pain type, cholesterol, etc.)  
 - Get real-time predictions whether the patient is at risk of heart disease  
-- Visualize the results and understand the model’s decision-making  
+- Visualize the results and understand the model’s decision-making
+- Downloading Prediction Report
+
+<p align="center">
+  <img src="https://go.screenpal.com/watch/cTQ2jInoEsM" width="600"/>
+</p>
+
+
 
 ---
 
