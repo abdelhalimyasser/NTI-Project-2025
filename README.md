@@ -49,11 +49,15 @@ This app allows you to:
 - Visualize the results and understand the model’s decision-making
 - Downloading Prediction Report
 
-<p align="center">
-  <img src="https://youtu.be/YvsRaySnnL8" width="600"/>
-</p>
-[![Watch the demo](https://img.youtube.com/vi/YvsRaySnnL8/0.jpg)](https://youtu.be/YvsRaySnnL8)
+## 🎥 Demo Video  
 
+👉 Click below to watch the demo on YouTube:  
+
+<p align="center">
+  <a href="https://youtu.be/YvsRaySnnL8">
+    <img src="https://img.youtube.com/vi/YvsRaySnnL8/0.jpg" alt="Demo Video" width="500"/>
+  </a>
+</p>
 
 
 ---
