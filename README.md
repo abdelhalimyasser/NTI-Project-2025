@@ -58,7 +58,7 @@ This app allows you to:
 ---
 
 ## 🛠️ Tech Stack  
-- **Python**  
+- **Python:** `Python 3.13.7` 
 - **Libraries:** `Pandas`, `NumPy`, `Matplotlib`, `Seaborn`, `Scikit-learn`  
 - **Notebook:** `Google Colab` & `Jupyter`  
 
