@@ -52,6 +52,7 @@ This app allows you to:
 <p align="center">
   <img src="https://youtu.be/YvsRaySnnL8" width="600"/>
 </p>
+[![Watch the demo](https://img.youtube.com/vi/YvsRaySnnL8/0.jpg)](https://youtu.be/YvsRaySnnL8)
 
 
 
