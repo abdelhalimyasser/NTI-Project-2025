@@ -37,6 +37,19 @@ The goal is to apply data preprocessing, exploratory analysis, and machine learn
 
 ---
 
+## 🚀 Try it Out  
+
+You can interact with the live demo of this project through **Streamlit App**:  
+
+👉 [Heart Disease Prediction – Streamlit App](https://heart-disease-prediction-nti.streamlit.app/)  
+
+This app allows you to:  
+- Input patient data (age, sex, chest pain type, cholesterol, etc.)  
+- Get real-time predictions whether the patient is at risk of heart disease  
+- Visualize the results and understand the model’s decision-making  
+
+---
+
 ## 📌 Results  
 - **Random Forest** and **Logistic Regression** performed best  
 - Key features influencing predictions: chest pain type, cholesterol, max heart rate  
