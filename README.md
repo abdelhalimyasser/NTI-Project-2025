@@ -50,7 +50,7 @@ This app allows you to:
 - Downloading Prediction Report
 
 <p align="center">
-  <img src="https://go.screenpal.com/watch/cTQ2jInoEsM" width="600"/>
+  <img src="https://youtu.be/YvsRaySnnL8" width="600"/>
 </p>
 
 
